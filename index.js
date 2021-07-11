@@ -1,0 +1,41 @@
+const app = require('express')()
+const server = require('http').createServer(app)
+const cors = require('cors')
+
+const io = require('socket.io')(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+})
+app.use(cors())
+io.on('connection', () => {
+  console.log('serverrr connected')
+})
+
+const PORT = process.env.PORT || 5000
+
+app.get('/', (req, res) => {
+  res.send('hello')
+})
+
+//! Socket with express
+io.on('connection', (socket) => {
+  socket.emit('me', socket.id)
+
+  socket.on('disconnect', () => {
+    socket.broadcast.emit('call ended')
+  })
+
+  socket.on('calluser', ({ userToCall, signalData, from, name }) => {
+    io.to(userToCall).emit('calluser', { signal: signalData, from, name })
+  })
+
+  socket.on('answercall', (data) => {
+    io.to(data.to).emit('callaccepted', data.signal)
+  })
+})
+
+app.listen(PORT, () => {
+  console.log('Express is listening')
+})
