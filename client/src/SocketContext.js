@@ -7,25 +7,39 @@ const socket = io('http://localhost:3000')
 
 const ContextProvider = ({ children }) => {
   const [stream, setStream] = useState(null)
-  const [Me, setSetMe] = useState('')
+  const [Me, setSetMe] = useState(null)
   const [call, setCall] = useState({})
   const [callAccepted, setCallAccepted] = useState(false)
   const [callEnded, setCallEnded] = useState(false)
-  const [name, setName] = useState('')
-
+  const [name, setName] = useState('') 
+ 
   //Immediately populate that video ifram with the src of our stream
   const myVideo = useRef()
   const userVideo = useRef()
   const connectionRef = useRef()
 
   useEffect(() => {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then((currentStream) => {
-        setStream(currentStream)
-        //we are setting video to our ref and in state
-        myVideo.current.srcObject = currentStream
-      })
+    // navigator.mediaDevices
+    //   .getUserMedia({ video: true, audio: true })
+    //   .then((currentStream) => {
+    //     setStream(currentStream)
+    //     //we are setting video to our ref and in state
+    //     myVideo.current.srcObject = currentStream
+    //   })
+
+    const getUserMedia = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        })
+        setStream(stream)
+        myVideo.current.srcObject = stream
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    getUserMedia()
 
     socket.on('me', (id) => setSetMe(id))
 
