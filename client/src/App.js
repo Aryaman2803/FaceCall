@@ -33,17 +33,14 @@ const App = () => {
   const classes = useStyles()
   return (
     <div className={classes.wrapper}>
-      <AppBar  className={classes.appBar} position='static' color='inherit'>
-        <Typography varient='h2' align='center'>
-          FaceCall
-        </Typography>
+      <AppBar className={classes.appBar} position="static" color="inherit">
+        <Typography variant="h2" align="center">Video Chat</Typography>
       </AppBar>
       <VideoPlayer />
       <Options>
         <Notifications />
       </Options>
     </div>
-  )
-}
-
+  );
+};
 export default App

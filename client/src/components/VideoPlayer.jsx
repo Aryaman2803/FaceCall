@@ -29,7 +29,7 @@ const VideoPlayer = () => {
   const classes = useStyles()
 
   return (
-    <Grid container={classes.gridContainer}>
+    <Grid container className={classes.gridContainer}>
       {/* Ouw own video */}
       {stream && (
         <Paper className={classes.paper}>

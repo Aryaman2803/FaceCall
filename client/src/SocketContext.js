@@ -3,15 +3,15 @@ import { io } from 'socket.io-client'
 import Peer from 'simple-peer'
 
 const SocketContext = createContext()
-const socket = io('http://localhost:3000')
+const socket = io('http://localhost:5000')
 
 const ContextProvider = ({ children }) => {
-  const [stream, setStream] = useState(null)
-  const [Me, setSetMe] = useState(null)
-  const [call, setCall] = useState({})
-  const [callAccepted, setCallAccepted] = useState(false)
-  const [callEnded, setCallEnded] = useState(false)
-  const [name, setName] = useState('') 
+  const [callAccepted, setCallAccepted] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
+  const [stream, setStream] = useState();
+  const [name, setName] = useState('');
+  const [call, setCall] = useState({});
+  const [me, setMe] = useState('');
  
   //Immediately populate that video ifram with the src of our stream
   const myVideo = useRef()
@@ -19,34 +19,19 @@ const ContextProvider = ({ children }) => {
   const connectionRef = useRef()
 
   useEffect(() => {
-    // navigator.mediaDevices
-    //   .getUserMedia({ video: true, audio: true })
-    //   .then((currentStream) => {
-    //     setStream(currentStream)
-    //     //we are setting video to our ref and in state
-    //     myVideo.current.srcObject = currentStream
-    //   })
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then((currentStream) => {
+        setStream(currentStream);
 
-    const getUserMedia = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        })
-        setStream(stream)
-        myVideo.current.srcObject = stream
-      } catch (err) {
-        console.log(err)
-      }
-    }
-    getUserMedia()
+        myVideo.current.srcObject = currentStream;
+      });
 
-    socket.on('me', (id) => setSetMe(id))
+    socket.on('me', (id) => setMe(id));
 
-    socket.on('calluser', ({ from, name: callerName, signal }) => {
-      setCall({ isRecievedCall: true, from, name: callerName, signal })
-    })
-  }, [])
+    socket.on('callUser', ({ from, name: callerName, signal }) => {
+      setCall({ isReceivingCall: true, from, name: callerName, signal });
+    });
+  }, []);
 
   const answerCall = () => {
     setCallAccepted(true)
@@ -54,7 +39,7 @@ const ContextProvider = ({ children }) => {
     const peer = new Peer({ initiator: false, trickle: false, stream })
 
     peer.on('signal', (data) => {
-      socket.emit('answercall', { signal: data, to: call.from })
+      socket.emit('answerCall', { signal: data, to: call.from })
     })
     //Now we are talking about the stream for the other person
     peer.on('stream', (currentStream) => {
@@ -65,14 +50,14 @@ const ContextProvider = ({ children }) => {
     connectionRef.current = peer
   }
 
-  const calluser = (id) => {
+  const callUser = (id) => {
     const peer = new Peer({ initiator: true, trickle: false, stream })
 
     peer.on('signal', (data) => {
-      socket.emit('calluser', {
+      socket.emit('callUser', {
         userToCall: id,
         signalData: data,
-        from: Me,
+        from: me,
         name,
       })
     })
@@ -81,7 +66,7 @@ const ContextProvider = ({ children }) => {
       userVideo.current.srcObject = currentStream
     })
 
-    socket.on('callaccepted', (signal) => {
+    socket.on('callAccepted', (signal) => {
       setCallAccepted(true)
       peer.signal(signal)
     })
@@ -106,9 +91,9 @@ const ContextProvider = ({ children }) => {
         stream,
         name,
         setName,
-        Me,
+        me,
         callEnded,
-        calluser,
+        callUser,
         leaveCall,
         answerCall,
       }}
